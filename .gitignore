@@ -1,0 +1,4 @@
+src/model.pkl
+src/dashboard_data.parquet
+data/
+venv/
