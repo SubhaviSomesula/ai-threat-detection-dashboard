@@ -2,21 +2,19 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import pickle
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 
-# Page config
 st.set_page_config(
     page_title="AI Threat Detection Dashboard",
     page_icon="🛡️",
     layout="wide"
 )
 
+
 @st.cache_resource
 def train_model():
-    st.write("⏳ Loading and training model on startup...")
     ddos = pd.read_parquet('data/DDoS-Friday-no-metadata.parquet')
     botnet = pd.read_parquet('data/Botnet-Friday-no-metadata.parquet')
     portscan = pd.read_parquet('data/Portscan-Friday-no-metadata.parquet')
@@ -41,15 +39,14 @@ def train_model():
 
     return model, le, numeric_cols, df
 
+
 model, le, features, df = train_model()
 df_sample = df.sample(n=10000, random_state=42)
 
-# Header
 st.title("🛡️ AI-Powered Network Threat Detection")
 st.markdown("Real-time cybersecurity monitoring using Machine Learning")
 st.divider()
 
-# Metrics
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("Total Records Analyzed", f"{len(df_sample):,}")
@@ -62,7 +59,6 @@ with col4:
 
 st.divider()
 
-# Charts
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("Attack Type Distribution")
@@ -81,7 +77,6 @@ with col2:
 
 st.divider()
 
-# Simulation
 st.subheader("🔴 Simulate Live Traffic Detection")
 st.markdown("Click the button to simulate incoming network traffic and see the AI detect threats in real time.")
 
@@ -90,4 +85,19 @@ if st.button("⚡ Run Threat Detection Simulation", type="primary"):
     predictions = model.predict(sample)
     pred_labels = le.inverse_transform(predictions)
 
-    results = pd.DataFrame(
+    results = pd.DataFrame({
+        'Timestamp': [datetime.now().strftime("%H:%M:%S")] * 20,
+        'Threat Detected': pred_labels,
+        'Risk Level': ['🔴 HIGH' if p != 'Benign' else '🟢 LOW' for p in pred_labels]
+    })
+
+    st.dataframe(results, use_container_width=True)
+
+    threat_count = sum(1 for p in pred_labels if p != 'Benign')
+    if threat_count > 0:
+        st.error(f"⚠️ {threat_count} threats detected in this batch!")
+    else:
+        st.success("✅ No threats detected in this batch.")
+
+st.divider()
+st.caption("Built by Subhavi Somesula | CICIDS 2017 Dataset | Random Forest Classifier")
