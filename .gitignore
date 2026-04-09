@@ -1,4 +1,5 @@
 src/model.pkl
-src/dashboard_data.parquet
-data/
 venv/
+.DS_Store
+__pycache__/
+*.pyc
